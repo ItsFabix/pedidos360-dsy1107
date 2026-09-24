@@ -195,8 +195,8 @@ Disponible en `http://localhost:4200`.
 
 El JWT Authorizer del API Gateway se configura con:
 
-- **Issuer:** `https://login.microsoftonline.com/<TENANT_ID>/v2.0`
-- **Audience:** `<CLIENT_ID_API>`
+- **Issuer:** `https://login.microsoftonline.com/84e517e6-6e52-43b3-82da-162220153ea3/v2.0`
+- **Audience:** `d7a99a6a-b387-494e-a239-5ea101bb3856`
 - **Scope requerido:** `Pedidos.Read`
 
 El Security Group de RDS acepta conexiones en el puerto 5432 únicamente desde
