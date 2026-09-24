@@ -1,0 +1,16 @@
+{
+  "folders": [
+    {
+      "name": "DSY1107 Semana 05 — Proyecto completo",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/target": true,
+      "**/.angular/cache": true
+    },
+    "java.configuration.updateBuildConfiguration": "automatic"
+  }
+}

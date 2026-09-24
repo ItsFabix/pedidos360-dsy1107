@@ -1,0 +1,155 @@
+<div class="tarjeta">
+    <h2>{{ auth.puedeGestionarEstados() ? 'Todos los pedidos' : 'Mis pedidos' }}</h2>
+
+    <div class="fila">
+        <button (click)="mostrarFormulario = !mostrarFormulario">
+            {{ mostrarFormulario ? 'Cancelar' : 'Nuevo pedido' }}
+        </button>
+        <button class="secundario" (click)="cargarPedidos()">Actualizar</button>
+    </div>
+</div>
+
+<div class="alerta error" *ngIf="error">{{ error }}</div>
+<div class="alerta ok" *ngIf="exito">{{ exito }}</div>
+
+<div class="tarjeta" *ngIf="mostrarFormulario">
+    <h2>Crear pedido</h2>
+
+    <div class="campo" style="margin-bottom:14px">
+        <label>Descripción</label>
+        <input type="text" [(ngModel)]="descripcion" placeholder="Ej: Compra de insumos">
+    </div>
+
+    <div class="fila">
+        <div class="campo" style="flex:1; min-width:240px">
+            <label>Producto</label>
+            <select [(ngModel)]="productoSeleccionado">
+                <option [ngValue]="null">Seleccione un producto</option>
+                <option *ngFor="let p of productos" [ngValue]="p.id" [disabled]="p.stock === 0">
+                    {{ p.nombre }} — {{ p.precio | currency:'CLP':'symbol-narrow':'1.0-0' }}
+                    (stock: {{ p.stock }})
+                </option>
+            </select>
+        </div>
+
+        <div class="campo" style="width:110px">
+            <label>Cantidad</label>
+            <input type="number" min="1" [(ngModel)]="cantidadSeleccionada">
+        </div>
+
+        <button class="secundario" (click)="agregarAlCarro()" [disabled]="!productoSeleccionado">
+            Agregar
+        </button>
+    </div>
+
+    <table *ngIf="carro.length > 0" style="margin-top:18px">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Subtotal</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let l of carro">
+                <td>{{ l.nombre }}</td>
+                <td>{{ l.cantidad }}</td>
+                <td>{{ l.precio | currency:'CLP':'symbol-narrow':'1.0-0' }}</td>
+                <td>{{ l.precio * l.cantidad | currency:'CLP':'symbol-narrow':'1.0-0' }}</td>
+                <td>
+                    <button class="secundario" (click)="quitarDelCarro(l.productoId)">Quitar</button>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3"><strong>Total</strong></td>
+                <td colspan="2">
+                    <strong>{{ totalCarro | currency:'CLP':'symbol-narrow':'1.0-0' }}</strong>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top:16px">
+        <button (click)="crearPedido()" [disabled]="carro.length === 0 || guardando">
+            {{ guardando ? 'Guardando...' : 'Confirmar pedido' }}
+        </button>
+    </div>
+
+    <p style="font-size:.82rem; color:#5a6472; margin-top:12px">
+        El precio de cada ítem lo asigna el servidor desde el catálogo; el cliente solo
+        envía el producto y la cantidad.
+    </p>
+</div>
+
+<div class="tarjeta">
+    <p *ngIf="cargando">Cargando pedidos...</p>
+    <p *ngIf="!cargando && pedidos.length === 0">No hay pedidos para mostrar.</p>
+
+    <table *ngIf="!cargando && pedidos.length > 0">
+        <thead>
+            <tr>
+                <th>N°</th>
+                <th>Fecha</th>
+                <th>Descripción</th>
+                <th *ngIf="auth.puedeGestionarEstados()">Cliente</th>
+                <th>Estado</th>
+                <th>Total</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <ng-container *ngFor="let pedido of pedidos">
+                <tr>
+                    <td>{{ pedido.id }}</td>
+                    <td>{{ pedido.fechaCreacion | date:'dd-MM-yyyy HH:mm' }}</td>
+                    <td>{{ pedido.descripcion || '—' }}</td>
+                    <td *ngIf="auth.puedeGestionarEstados()">{{ pedido.clienteNombre || '—' }}</td>
+                    <td><span [class]="claseEstado(pedido.estado)">{{ etiquetas[pedido.estado] }}</span></td>
+                    <td>{{ pedido.total | currency:'CLP':'symbol-narrow':'1.0-0' }}</td>
+                    <td>
+                        <div class="fila">
+                            <button class="secundario" (click)="alternarDetalle(pedido.id)">
+                                {{ expandido === pedido.id ? 'Ocultar' : 'Detalle' }}
+                            </button>
+
+                            <ng-container *ngIf="auth.puedeGestionarEstados()">
+                                <button *ngFor="let e of siguientes(pedido.estado)" (click)="cambiarEstado(pedido, e)">
+                                    {{ etiquetas[e] }}
+                                </button>
+                            </ng-container>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr *ngIf="expandido === pedido.id">
+                    <td [attr.colspan]="auth.puedeGestionarEstados() ? 7 : 6">
+                        <strong>Ítems del pedido</strong>
+                        <table style="margin-top:8px">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio unitario</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of pedido.items">
+                                    <td>{{ item.nombreProducto }}</td>
+                                    <td>{{ item.cantidad }}</td>
+                                    <td>{{ item.precioUnitario | currency:'CLP':'symbol-narrow':'1.0-0' }}</td>
+                                    <td>
+                                        {{ item.precioUnitario * item.cantidad
+                                        | currency:'CLP':'symbol-narrow':'1.0-0' }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            </ng-container>
+        </tbody>
+    </table>
+</div>

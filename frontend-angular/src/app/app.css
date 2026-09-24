@@ -1,0 +1,76 @@
+.barra {
+  background: var(--azul);
+  color: #fff;
+  padding: 0 16px;
+}
+
+.barra-interna {
+  max-width: 1100px;
+  margin: 0 auto;
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.marca {
+  display: flex;
+  flex-direction: column;
+}
+
+.marca strong {
+  font-size: 1.1rem;
+}
+
+.marca span {
+  font-size: .72rem;
+  opacity: .8;
+}
+
+nav {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+}
+
+nav a {
+  color: #d8e2f2;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: .9rem;
+}
+
+nav a:hover {
+  background: rgba(255, 255, 255, .12);
+  color: #fff;
+}
+
+nav a.activo {
+  background: rgba(255, 255, 255, .2);
+  color: #fff;
+  font-weight: 600;
+}
+
+.sesion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.usuario {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.nombre {
+  font-size: .88rem;
+}
+
+.sesion .badge {
+  background: rgba(255, 255, 255, .18);
+  color: #fff;
+}

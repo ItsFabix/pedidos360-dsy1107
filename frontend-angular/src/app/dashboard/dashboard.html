@@ -1,0 +1,100 @@
+<div class="tarjeta">
+    <h2>Hola, {{ auth.nombre() }}</h2>
+    <p>
+        Sesión iniciada como <strong>{{ auth.correo() }}</strong>
+        con rol <span class="badge">{{ auth.rolPrincipal() }}</span>
+    </p>
+
+    <p *ngIf="auth.esAdmin()">
+        Como Administrador puedes gestionar el catálogo y cambiar el estado de cualquier pedido.
+    </p>
+    <p *ngIf="auth.tieneRol('Operador')">
+        Como Operador puedes revisar todos los pedidos y avanzar sus estados.
+    </p>
+    <p *ngIf="!auth.puedeGestionarEstados()">
+        Como Cliente puedes crear pedidos y hacer seguimiento de los tuyos.
+    </p>
+</div>
+
+<div class="alerta error" *ngIf="error">{{ error }}</div>
+
+<div class="tarjeta" *ngIf="!cargando">
+    <h2>Resumen</h2>
+
+    <div class="indicadores">
+        <div class="indicador">
+            <span class="valor">{{ pedidos.length }}</span>
+            <span class="etiqueta">
+                {{ auth.puedeGestionarEstados() ? 'Pedidos totales' : 'Mis pedidos' }}
+            </span>
+        </div>
+
+        <div class="indicador">
+            <span class="valor">{{ pendientes }}</span>
+            <span class="etiqueta">En proceso</span>
+        </div>
+
+        <div class="indicador">
+            <span class="valor">{{ contarPorEstado('ENTREGADO') }}</span>
+            <span class="etiqueta">Entregados</span>
+        </div>
+
+        <div class="indicador">
+            <span class="valor">{{ montoTotal | currency:'CLP':'symbol-narrow':'1.0-0' }}</span>
+            <span class="etiqueta">Monto acumulado</span>
+        </div>
+    </div>
+</div>
+
+<div class="tarjeta" *ngIf="!cargando">
+    <h2>Últimos pedidos</h2>
+
+    <p *ngIf="pedidos.length === 0">
+        Aún no hay pedidos registrados.
+        <a routerLink="/orders">Crear el primero</a>
+    </p>
+
+    <table *ngIf="pedidos.length > 0">
+        <thead>
+            <tr>
+                <th>N°</th>
+                <th>Descripción</th>
+                <th *ngIf="auth.puedeGestionarEstados()">Cliente</th>
+                <th>Estado</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let pedido of ultimos">
+                <td>{{ pedido.id }}</td>
+                <td>{{ pedido.descripcion || '—' }}</td>
+                <td *ngIf="auth.puedeGestionarEstados()">{{ pedido.clienteNombre || '—' }}</td>
+                <td><span class="badge">{{ etiquetas[pedido.estado] }}</span></td>
+                <td>{{ pedido.total | currency:'CLP':'symbol-narrow':'1.0-0' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p style="margin-top:14px">
+        <a routerLink="/orders">Ver todos los pedidos</a>
+    </p>
+</div>
+
+<div class="tarjeta" *ngIf="auth.esAdmin() && stockBajo.length > 0">
+    <h2>Productos con stock bajo</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Stock</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let p of stockBajo">
+                <td>{{ p.nombre }}</td>
+                <td><span class="badge naranjo">{{ p.stock }}</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <p style="margin-top:14px"><a routerLink="/catalog">Ir al catálogo</a></p>
+</div>

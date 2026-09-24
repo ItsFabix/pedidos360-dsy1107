@@ -1,0 +1,79 @@
+<div class="tarjeta">
+    <h2>Catálogo de productos</h2>
+
+    <p *ngIf="!auth.esAdmin()" style="font-size:.88rem; color:#5a6472">
+        Puedes consultar el catálogo. La creación y edición de productos está
+        reservada al rol Admin.
+    </p>
+
+    <div class="fila">
+        <button *ngIf="auth.esAdmin()" (click)="nuevo()">Nuevo producto</button>
+        <button class="secundario" (click)="cargar()">Actualizar</button>
+    </div>
+</div>
+
+<div class="alerta error" *ngIf="error">{{ error }}</div>
+<div class="alerta ok" *ngIf="exito">{{ exito }}</div>
+
+<div class="tarjeta" *ngIf="mostrarFormulario && auth.esAdmin()">
+    <h2>{{ editandoId ? 'Editar producto N° ' + editandoId : 'Nuevo producto' }}</h2>
+
+    <div class="fila">
+        <div class="campo" style="flex:1; min-width:220px">
+            <label>Nombre</label>
+            <input type="text" [(ngModel)]="form.nombre">
+        </div>
+
+        <div class="campo" style="flex:1; min-width:220px">
+            <label>Descripción</label>
+            <input type="text" [(ngModel)]="form.descripcion">
+        </div>
+
+        <div class="campo" style="width:140px">
+            <label>Precio</label>
+            <input type="number" min="0" [(ngModel)]="form.precio">
+        </div>
+
+        <div class="campo" style="width:110px">
+            <label>Stock</label>
+            <input type="number" min="0" [(ngModel)]="form.stock">
+        </div>
+    </div>
+
+    <div class="fila" style="margin-top:16px">
+        <button (click)="guardar()" [disabled]="guardando">
+            {{ guardando ? 'Guardando...' : 'Guardar' }}
+        </button>
+        <button class="secundario" (click)="cancelar()">Cancelar</button>
+    </div>
+</div>
+
+<div class="tarjeta">
+    <p *ngIf="cargando">Cargando catálogo...</p>
+    <p *ngIf="!cargando && productos.length === 0">No hay productos registrados.</p>
+
+    <table *ngIf="!cargando && productos.length > 0">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Producto</th>
+                <th>Descripción</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th *ngIf="auth.esAdmin()">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let p of productos">
+                <td>{{ p.id }}</td>
+                <td>{{ p.nombre }}</td>
+                <td>{{ p.descripcion || '—' }}</td>
+                <td>{{ p.precio | currency:'CLP':'symbol-narrow':'1.0-0' }}</td>
+                <td><span [class]="claseStock(p.stock)">{{ p.stock }}</span></td>
+                <td *ngIf="auth.esAdmin()">
+                    <button class="secundario" (click)="editar(p)">Editar</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

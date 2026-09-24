@@ -1,0 +1,45 @@
+<header class="barra">
+  <div class="barra-interna">
+    <div class="marca">
+      <strong>Pedidos360</strong>
+      <span>DSY1107 · Desarrollo Cloud Native I</span>
+    </div>
+
+    <nav *ngIf="autenticado">
+      <a routerLink="/dashboard" routerLinkActive="activo">Inicio</a>
+      <a routerLink="/orders" routerLinkActive="activo">Pedidos</a>
+      <a routerLink="/catalog" routerLinkActive="activo">Catálogo</a>
+      <a routerLink="/diagnostico" routerLinkActive="activo">Diagnóstico</a>
+    </nav>
+
+    <div class="sesion">
+      <ng-container *ngIf="autenticado; else sinSesion">
+        <div class="usuario">
+          <span class="nombre">{{ auth.nombre() }}</span>
+          <span class="badge">{{ auth.rolPrincipal() }}</span>
+        </div>
+        <button class="secundario" (click)="logout()">Cerrar sesión</button>
+      </ng-container>
+
+      <ng-template #sinSesion>
+        <button (click)="login()">Iniciar sesión con Microsoft</button>
+      </ng-template>
+    </div>
+  </div>
+</header>
+
+<main class="contenedor">
+  <router-outlet *ngIf="autenticado; else bienvenida"></router-outlet>
+
+  <ng-template #bienvenida>
+    <div class="tarjeta">
+      <h2>Bienvenido a Pedidos360</h2>
+      <p>
+        Plataforma de gestión de pedidos con autenticación mediante
+        Microsoft Entra ID (Authorization Code + PKCE) y autorización por roles.
+      </p>
+      <p>Inicia sesión para continuar.</p>
+      <button (click)="login()">Iniciar sesión con Microsoft</button>
+    </div>
+  </ng-template>
+</main>
