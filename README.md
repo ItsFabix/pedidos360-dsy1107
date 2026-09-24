@@ -188,10 +188,10 @@ Disponible en `http://localhost:4200`.
 
 | Componente | Detalle |
 |---|---|
-| Base de datos | Amazon RDS PostgreSQL — `<ENDPOINT_RDS>` |
-| Backend | EC2 Amazon Linux 2023, Java 21 — `<IP_PUBLICA_EC2>` |
-| API Gateway | HTTP API — `<URL_API_GATEWAY>` |
-| Frontend | `<URL_FRONTEND>` |
+| Base de datos | Amazon RDS PostgreSQL — dsy1107-pedidos-db.crlbffxj6fqf.us-east-1.rds.amazonaws.com |
+| Backend | EC2 Amazon Linux 2023, Java 21 — 3.87.55.203 |
+| API Gateway | HTTP API — https://tjkn3r8p13.execute-api.us-east-1.amazonaws.com |
+| Frontend | Ejecución local en http://localhost:4200 |
 
 El JWT Authorizer del API Gateway se configura con:
 
