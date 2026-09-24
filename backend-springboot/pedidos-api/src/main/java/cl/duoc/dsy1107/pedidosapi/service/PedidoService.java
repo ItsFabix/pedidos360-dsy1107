@@ -81,9 +81,17 @@ public class PedidoService {
         }
 
         // Regla de negocio: al ACEPTAR el pedido se descuenta el stock
+        // Regla de negocio: al ACEPTAR el pedido se descuenta el stock
         if (nuevoEstado == EstadoPedido.ACEPTADO) {
             for (ItemPedido item : pedido.getItems()) {
                 productoService.descontarStock(item.getProductoId(), item.getCantidad());
+            }
+        }
+
+        // Si se cancela un pedido que ya había descontado stock, se repone
+        if (nuevoEstado == EstadoPedido.CANCELADO && actual != EstadoPedido.CREADO) {
+            for (ItemPedido item : pedido.getItems()) {
+                productoService.reponerStock(item.getProductoId(), item.getCantidad());
             }
         }
 

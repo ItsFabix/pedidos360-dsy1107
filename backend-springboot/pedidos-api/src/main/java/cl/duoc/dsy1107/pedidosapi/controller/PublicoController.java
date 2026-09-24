@@ -13,9 +13,8 @@ public class PublicoController {
     @GetMapping("/publico")
     public Map<String, String> publico() {
         return Map.of(
-            "mensaje", "Endpoint público operativo",
-            "semana", "05",
-            "arquitectura", "API Gateway -> Spring Boot/EC2 -> RDS PostgreSQL"
-        );
+                "mensaje", "Endpoint público operativo",
+                "aplicacion", "Pedidos360",
+                "arquitectura", "Angular -> Entra ID -> API Gateway -> Spring Boot/EC2 -> RDS PostgreSQL");
     }
 }

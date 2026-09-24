@@ -17,5 +17,5 @@ export const environment = {
 
   // AWS → API Gateway → HTTP API → Invoke URL.
   // Ejemplo: https://abc123.execute-api.us-east-1.amazonaws.com
-  apiBaseUrl: 'http://localhost:8080'
+  apiBaseUrl: 'https://tjkn3r8p13.execute-api.us-east-1.amazonaws.com'
 };

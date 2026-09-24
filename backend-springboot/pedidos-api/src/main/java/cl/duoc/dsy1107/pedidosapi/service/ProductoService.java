@@ -66,4 +66,11 @@ public class ProductoService {
         producto.setStock(producto.getStock() - cantidad);
         repository.save(producto);
     }
+
+    @Transactional
+    public void reponerStock(Long productoId, int cantidad) {
+        Producto producto = buscarPorId(productoId);
+        producto.setStock(producto.getStock() + cantidad);
+        repository.save(producto);
+    }
 }
