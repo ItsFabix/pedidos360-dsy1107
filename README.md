@@ -189,7 +189,7 @@ Disponible en `http://localhost:4200`.
 | Componente | Detalle |
 |---|---|
 | Base de datos | Amazon RDS PostgreSQL — dsy1107-pedidos-db.crlbffxj6fqf.us-east-1.rds.amazonaws.com |
-| Backend | EC2 Amazon Linux 2023, Java 21 — 3.87.55.203 |
+| Backend | EC2 Amazon Linux 2023, Java 21 — 44.211.223.83 |
 | API Gateway | HTTP API — https://tjkn3r8p13.execute-api.us-east-1.amazonaws.com |
 | Frontend | Ejecución local en http://localhost:4200 |
 
