@@ -2,12 +2,14 @@ package cl.duoc.dsy1107.pedidosapi.service;
 
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import cl.duoc.dsy1107.pedidosapi.dto.CrearPedidoRequest;
+import cl.duoc.dsy1107.pedidosapi.mensajeria.PedidoEstadoCambiado;
 import cl.duoc.dsy1107.pedidosapi.model.EstadoPedido;
 import cl.duoc.dsy1107.pedidosapi.model.ItemPedido;
 import cl.duoc.dsy1107.pedidosapi.model.Pedido;
@@ -19,10 +21,13 @@ public class PedidoService {
 
     private final PedidoRepository repository;
     private final ProductoService productoService;
+    private final ApplicationEventPublisher eventos;
 
-    public PedidoService(PedidoRepository repository, ProductoService productoService) {
+    public PedidoService(PedidoRepository repository, ProductoService productoService,
+            ApplicationEventPublisher eventos) {
         this.repository = repository;
         this.productoService = productoService;
+        this.eventos = eventos;
     }
 
     @Transactional(readOnly = true)
@@ -96,7 +101,12 @@ public class PedidoService {
         }
 
         pedido.setEstado(nuevoEstado);
-        return repository.save(pedido);
+        Pedido guardado = repository.save(pedido);
+
+        // Se publica dentro de la transacción; el mensaje a RabbitMQ sale recién
+        // después del commit.
+        eventos.publishEvent(new PedidoEstadoCambiado(guardado.getId(), guardado.getClienteId(), nuevoEstado));
+        return guardado;
     }
 
     @Transactional(readOnly = true)
