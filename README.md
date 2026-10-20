@@ -189,7 +189,7 @@ Disponible en `http://localhost:4200`.
 | Componente | Detalle |
 |---|---|
 | Base de datos | Amazon RDS PostgreSQL — dsy1107-pedidos-db.crlbffxj6fqf.us-east-1.rds.amazonaws.com |
-| Backend | EC2 Amazon Linux 2023, Java 21 — 44.211.223.83 |
+| Backend | EC2 Amazon Linux 2023, Java 21 — IP elástica 3.234.179.54 |
 | API Gateway | HTTP API — https://tjkn3r8p13.execute-api.us-east-1.amazonaws.com |
 | Frontend | Ejecución local en http://localhost:4200 |
 
@@ -290,3 +290,15 @@ ni pedidos aceptados sin respaldo de inventario.
 La interfaz solo ofrece las transiciones válidas para el estado actual del
 pedido, pero esa restricción es una ayuda visual: la validación que realmente
 protege el sistema ocurre en el backend.
+
+---
+
+## 11. Mensajería asíncrona (EP3 y EP4)
+
+Pedidos360 incorpora RabbitMQ sobre lo anterior: `pedidos-api` publica un evento cuando un pedido cambia de
+estado, `pedidos-mensajeria` lo consume por dominio (notificaciones, cocina, documentos) con reintentos y DLQ,
+y `rabbit-admin` permite administrar colas, exchanges y bindings. El broker es un clúster de dos nodos con
+Docker Compose (`infra/cluster`).
+
+Diseño, política de errores, endpoints de administración y trazabilidad con la rúbrica:
+[`docs/EP3-EP4-mensajeria.md`](docs/EP3-EP4-mensajeria.md).
