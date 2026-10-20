@@ -1,7 +1,6 @@
 package cl.duoc.dsy1107.mensajeria.service;
 
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
@@ -24,22 +23,6 @@ public class SimulacionFallos {
                 .map(String::trim)
                 .filter(DOMINIOS_VALIDOS::contains)
                 .forEach(activos::add);
-    }
-
-    public static boolean esDominioValido(String dominio) {
-        return DOMINIOS_VALIDOS.contains(dominio);
-    }
-
-    public void activar(String dominio) {
-        activos.add(dominio);
-    }
-
-    public void desactivar(String dominio) {
-        activos.remove(dominio);
-    }
-
-    public Set<String> activos() {
-        return new TreeSet<>(activos);
     }
 
     /** Lanza una excepción si el dominio está marcado para fallar. */
