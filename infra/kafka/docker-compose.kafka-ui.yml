@@ -1,0 +1,24 @@
+# Pedidos360 | Kafka UI (Kafbat) para administrar brokers, topicos, mensajes y consumer groups.
+# Se conecta a la red del compose de Kafka; levantar primero docker-compose.kafka.yml.
+# Publicado solo en 127.0.0.1: no tiene login, no exponer a Internet.
+name: pedidos360-kafka-ui
+
+services:
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:v1.5.0
+    hostname: kafka-ui
+    container_name: pedidos360-kafka-ui
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: "pedidos360-kafka"
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka-1:19092,kafka-2:19092,kafka-3:19092"
+      DYNAMIC_CONFIG_ENABLED: "false"
+    networks:
+      - kafka-net
+
+networks:
+  kafka-net:
+    name: pedidos360-kafka-net
+    external: true
