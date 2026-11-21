@@ -23,6 +23,7 @@ import org.springframework.kafka.support.serializer.DelegatingByTypeSerializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.util.backoff.FixedBackOff;
 
+import cl.duoc.dsy1107.auditoria.modelo.AlertaPedido;
 import cl.duoc.dsy1107.auditoria.modelo.PedidoEvento;
 
 /**
@@ -51,6 +52,7 @@ public class KafkaErroresConfig {
         Map<Class<?>, Serializer<?>> serializadores = new HashMap<>();
         serializadores.put(byte[].class, new ByteArraySerializer());
         serializadores.put(PedidoEvento.class, new JsonSerializer<PedidoEvento>().noTypeInfo());
+        serializadores.put(AlertaPedido.class, new JsonSerializer<AlertaPedido>().noTypeInfo());
 
         Map<String, Object> propiedades = new HashMap<>();
         propiedades.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);

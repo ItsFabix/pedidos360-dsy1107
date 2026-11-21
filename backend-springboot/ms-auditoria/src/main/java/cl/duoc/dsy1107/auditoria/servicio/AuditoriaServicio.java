@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import cl.duoc.dsy1107.auditoria.modelo.RegistroAlerta;
 import cl.duoc.dsy1107.auditoria.modelo.RegistroAuditoria;
 
 /**
@@ -32,6 +33,8 @@ public class AuditoriaServicio {
 
     private final Map<Long, List<RegistroAuditoria>> lineasDeTiempo = new ConcurrentHashMap<>();
 
+    private final List<RegistroAlerta> alertas = new CopyOnWriteArrayList<>();
+
     /** @return true si el evento era nuevo, false si ya estaba registrado. */
     public boolean registrar(RegistroAuditoria registro) {
         boolean[] nuevo = { false };
@@ -54,6 +57,25 @@ public class AuditoriaServicio {
             log.warn("Evento duplicado descartado: eventoId={}", registro.evento().eventoId());
         }
         return nuevo[0];
+    }
+
+    /** @return true si la alerta era nueva, false si ya estaba registrada. */
+    public synchronized boolean registrarAlerta(RegistroAlerta registro) {
+        boolean repetida = alertas.stream()
+                .anyMatch(a -> a.alerta().alertaId().equals(registro.alerta().alertaId()));
+        if (repetida) {
+            log.warn("Alerta duplicada descartada: alertaId={}", registro.alerta().alertaId());
+            return false;
+        }
+        alertas.add(registro);
+        log.info("Alerta auditada: pedido={} tipo={} particion={} offset={}",
+                registro.alerta().pedidoId(), registro.alerta().tipo(),
+                registro.particion(), registro.offset());
+        return true;
+    }
+
+    public List<RegistroAlerta> consultarAlertas() {
+        return List.copyOf(alertas);
     }
 
     public List<RegistroAuditoria> consultar(Long pedidoId) {

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import cl.duoc.dsy1107.auditoria.modelo.RegistroAlerta;
 import cl.duoc.dsy1107.auditoria.modelo.RegistroAuditoria;
 import cl.duoc.dsy1107.auditoria.servicio.AuditoriaServicio;
 
@@ -30,5 +31,10 @@ public class AuditoriaController {
                     "Sin eventos auditados para el pedido " + id);
         }
         return lista;
+    }
+
+    @GetMapping("/alertas")
+    public List<RegistroAlerta> alertas() {
+        return servicio.consultarAlertas();
     }
 }
