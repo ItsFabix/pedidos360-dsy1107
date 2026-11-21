@@ -18,9 +18,12 @@ import cl.duoc.dsy1107.auditoria.modelo.RegistroAuditoria;
  * Kafka entrega "al menos una vez", asi que un evento puede llegar repetido.
  * Por eso se descarta el que tenga un eventoId ya registrado (idempotencia).
  *
- * Limite conocido: el almacenamiento es en memoria. Si el servicio se reinicia,
- * el grupo de consumo vuelve a leer desde el inicio del topico y reconstruye
- * todo.
+ * Limite conocido: el almacenamiento es en memoria. Al reiniciar el servicio se
+ * pierde la linea de tiempo, y el grupo continua desde el ultimo offset
+ * confirmado
+ * (no relee todo). Para reconstruirla hay que reiniciar los offsets del grupo
+ * (kafka-consumer-groups --reset-offsets --to-earliest) o guardar en una base
+ * de datos.
  */
 @Service
 public class AuditoriaServicio {
