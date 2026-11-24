@@ -151,7 +151,3 @@ Servicios: `ms-auditoria`, `ms-analitica`, `kafka-admin` y `pedidos-api`. Para e
 - **Aumentar particiones** cambia a qué partición va cada clave nueva, así que se pierde el orden entre eventos antiguos y nuevos de un mismo pedido.
 - **Sin cifrado ni autenticación en el clúster** (PLAINTEXT, solo local). Kafka UI no tiene login y está enlazado únicamente a `127.0.0.1`.
 - **Kafka solo corre en local:** en AWS (EC2) el productor está desactivado.
-
-## Kafka (EP5 / EP6)
-
-Arquitectura, tópicos, consumidores, manejo de errores y administración: ver [`infra/kafka/README.md`](infra/kafka/README.md).

@@ -5,7 +5,7 @@ Microsoft Entra ID y autorización por roles.
 
 **Autor:** Fabián Parrao Figueroa
 **Asignatura:** DSY1107 — Desarrollo Cloud Native I (Duoc UC)
-**Entrega:** EP1 — Primer bloque evaluativo
+**Entregas:** proyecto acumulativo — EP1 (Pedidos y Catálogo), EP3–EP4 (RabbitMQ, sección 11), EP5–EP6 (Kafka, sección 12)
 
 ---
 
@@ -17,9 +17,10 @@ con identidad federada: los usuarios se autentican contra Microsoft Entra ID
 usando Authorization Code + PKCE, y cada operación se autoriza según el rol que
 viaja dentro del token.
 
-Esta entrega cubre el alcance mínimo de la EP1: dos módulos funcionales
-(Pedidos y Catálogo), tres roles con diferencias reales de permisos, y las
-pruebas de seguridad 200 / 401 / 403.
+El proyecto es acumulativo: EP1 cubre dos módulos funcionales (Pedidos y
+Catálogo), tres roles con diferencias reales de permisos y las pruebas de
+seguridad 200/401/403; EP3 y EP4 agregan mensajería asíncrona con RabbitMQ
+(sección 11); EP5 y EP6 agregan streaming de eventos con Kafka (sección 12).
 
 ---
 
@@ -63,7 +64,9 @@ La validación de seguridad ocurre en dos capas:
 | Identidad         | Microsoft Entra ID (OAuth 2.0 + OIDC)                         |
 | Base de datos     | PostgreSQL 18 (Amazon RDS en la nube, Docker en local)        |
 | Documentación API | springdoc-openapi (Swagger UI)                                |
-| Infraestructura   | AWS EC2, AWS API Gateway (HTTP API)                           |
+| Mensajería        | RabbitMQ 4 (clúster de 2 nodos), Spring AMQP                 |
+| Streaming         | Apache Kafka 3.9 (Confluent Platform 7.9.1), Spring Kafka, Kafka UI |
+| Infraestructura   | AWS EC2, AWS API Gateway (HTTP API), Docker Compose           |
 
 ---
 
@@ -71,26 +74,32 @@ La validación de seguridad ocurre en dos capas:
 
 ```
 pedidos360/
-├── backend-springboot/pedidos-api/
-│   └── src/main/java/cl/duoc/dsy1107/pedidosapi/
-│       ├── config/
-│       │   ├── SecurityConfig.java     Reglas de autorización y JWT
-│       │   └── DataInitializer.java    Carga inicial del catálogo
-│       ├── controller/
-│       │   ├── PedidoController.java   /api/orders
-│       │   ├── CatalogController.java  /api/catalog/products
-│       │   ├── AdminController.java    /api/admin/resumen
-│       │   └── PublicoController.java  /api/publico
-│       ├── dto/                        Objetos de entrada validados
-│       ├── model/
-│       │   ├── EstadoPedido.java       Enum con la máquina de estados
-│       │   ├── Pedido.java
-│       │   ├── ItemPedido.java
-│       │   └── Producto.java
-│       ├── repository/
-│       └── service/
-│           ├── PedidoService.java      Lógica de estados y stock
-│           └── ProductoService.java
+├── backend-springboot/
+│   ├── pedidos-api/
+│   │   └── src/main/java/cl/duoc/dsy1107/pedidosapi/
+│   │       ├── config/
+│   │       │   ├── SecurityConfig.java     Reglas de autorización y JWT
+│   │       │   └── DataInitializer.java    Carga inicial del catálogo
+│   │       ├── controller/
+│   │       │   ├── PedidoController.java   /api/orders
+│   │       │   ├── CatalogController.java  /api/catalog/products
+│   │       │   ├── AdminController.java    /api/admin/resumen
+│   │       │   └── PublicoController.java  /api/publico
+│   │       ├── dto/                        Objetos de entrada validados
+│   │       ├── model/
+│   │       │   ├── EstadoPedido.java       Enum con la máquina de estados
+│   │       │   ├── Pedido.java
+│   │       │   ├── ItemPedido.java
+│   │       │   └── Producto.java
+│   │       ├── repository/
+│   │       └── service/
+│   │           ├── PedidoService.java      Lógica de estados y stock
+│   │           └── ProductoService.java
+│   ├── pedidos-mensajeria/             Consumidores RabbitMQ por dominio (EP3–EP4)
+│   ├── rabbit-admin/                   Administración de colas y exchanges (EP3–EP4)
+│   ├── ms-auditoria/                   Consumidor Kafka: línea de tiempo de pedidos (EP5)
+│   ├── ms-analitica/                   Consumidor y productor Kafka: alertas (EP5)
+│   └── kafka-admin/                    Administración de tópicos y grupos Kafka (EP5)
 │
 ├── frontend-angular/src/app/
 │   ├── app.ts / app.html               Layout, navegación y sesión
@@ -101,6 +110,13 @@ pedidos360/
 │   ├── dashboard/                      Resumen según rol
 │   ├── orders/                         Gestión de pedidos
 │   └── catalog/                        Gestión de catálogo
+│
+├── infra/
+│   ├── cluster/                        Docker Compose: clúster RabbitMQ de 2 nodos
+│   └── kafka/                          Docker Compose: clúster Kafka (3 ZooKeeper + 3 brokers)
+│
+├── docs/
+│   └── EP3-EP4-mensajeria.md           Diseño y trazabilidad de mensajería RabbitMQ
 │
 └── local-dev/
     └── docker-compose.postgres.yml     PostgreSQL para desarrollo local
@@ -323,6 +339,39 @@ Kafka complementa a RabbitMQ, no lo reemplaza. `pedidos-api` publica cada cambio
 | Kafka UI             | 8090   | Solo en `127.0.0.1`, sin login                                              |
 | Front Angular        | 4200   |                                                                             |
 
-Pruebas unitarias de los servicios Kafka: `.\mvnw.cmd test` dentro de cada carpeta.
+### Variables de entorno
+
+| Variable                  | Valor por defecto                                        | Servicios                               |
+| ------------------------- | -------------------------------------------------------- | --------------------------------------- |
+| `KAFKA_BOOTSTRAP_SERVERS` | `localhost:29092,localhost:39092,localhost:49092`         | Todos los servicios Kafka               |
+| `KAFKA_HABILITADO`        | `false`                                                  | Solo `pedidos-api`; activa el productor |
+
+Kafka no requiere credenciales: el clúster local usa `PLAINTEXT` sin autenticación.
+
+### Levantar
+
+```powershell
+# 1. Clúster Kafka (desde la raíz del proyecto)
+.\infra\kafka\scripts\01_iniciar_kafka.ps1
+.\infra\kafka\scripts\02_verificar_cluster.ps1
+.\infra\kafka\scripts\03_crear_topicos.ps1
+
+# 2. ms-auditoria, ms-analitica, kafka-admin (cada uno en su terminal)
+cd backend-springboot\<servicio>
+.\mvnw.cmd spring-boot:run
+
+# 3. pedidos-api: requiere PostgreSQL levantado y el productor activado
+cd backend-springboot\pedidos-api
+$env:KAFKA_HABILITADO = "true"
+.\mvnw.cmd spring-boot:run
+```
+
+### Despliegue
+
+Kafka corre solo en local con Docker Compose. En AWS (EC2) el productor de `pedidos-api` está desactivado (la variable `KAFKA_HABILITADO` no se define en la instancia) y RabbitMQ sigue siendo el mecanismo de mensajería activo.
+
+### Pruebas
+
+`.\mvnw.cmd test` dentro de `ms-auditoria` (5 pruebas), `ms-analitica` (5 pruebas) y `kafka-admin` (3 pruebas). Todos los tests pasan sin infraestructura levantada.
 
 Arquitectura, tópicos, manejo de errores, scripts y trazabilidad con la rúbrica: [`infra/kafka/README.md`](infra/kafka/README.md).
