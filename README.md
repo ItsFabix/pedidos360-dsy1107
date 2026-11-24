@@ -53,6 +53,33 @@ La validación de seguridad ocurre en dos capas:
 - **Spring Security** rechaza con **403** los tokens válidos cuyo rol no
   autoriza esa operación.
 
+### Mensajería y streaming (EP3 a EP6)
+
+```mermaid
+flowchart LR
+    FE["Angular + MSAL<br/>localhost:4200"] -->|"JWT"| GW["AWS API Gateway<br/>JWT Authorizer"]
+    GW --> API["pedidos-api :8080<br/>EC2 + RDS PostgreSQL"]
+    API -->|"evento de estado"| RMQ
+    API -.->|"KAFKA_HABILITADO=true<br/>solo en local"| KAF
+    subgraph RMQ["RabbitMQ: EC2 dsy1107-rabbit, clúster de 2 nodos"]
+        EX["Exchanges direct y topic"] --> Q["Colas cocina, documentos,<br/>notificaciones y monitoreo<br/>+ retry y DLQ"]
+    end
+    Q --> MSG["pedidos-mensajeria :8081"]
+    RADM["rabbit-admin :8082"] --> RMQ
+    subgraph KAF["Kafka: Docker local, 3 ZooKeeper + 3 brokers"]
+        EV[("eventos<br/>3 part / 3 rep")]
+        AL[("alertas<br/>3 part / 3 rep")]
+    end
+    EV --> AUD["ms-auditoria :8084"]
+    EV --> ANA["ms-analitica :8085"]
+    ANA --> AL
+    AL --> AUD
+    KADM["kafka-admin :8083"] --> KAF
+```
+
+Diseño de mensajería: [`docs/EP3-EP4-mensajeria.md`](docs/EP3-EP4-mensajeria.md).
+Arquitectura Kafka y tópicos: [`infra/kafka/README.md`](infra/kafka/README.md).
+
 ---
 
 ## 3. Tecnologías
@@ -192,7 +219,7 @@ Documentación de la API: `http://localhost:8080/swagger-ui.html`
 ```bash
 cd frontend-angular
 npm install
-npx ng serve
+npm start
 ```
 
 Disponible en `http://localhost:4200`.
@@ -201,6 +228,8 @@ Disponible en `http://localhost:4200`.
 > se versionan. El Tenant ID y los Client ID no son secretos y sí están en el
 > código.
 
+Para levantar el clúster RabbitMQ y los consumidores, ver la sección 11. Para el clúster Kafka, ver la sección 12.
+
 ---
 
 ## 7. Despliegue en AWS
@@ -208,9 +237,10 @@ Disponible en `http://localhost:4200`.
 | Componente    | Detalle                                                                             |
 | ------------- | ----------------------------------------------------------------------------------- |
 | Base de datos | Amazon RDS PostgreSQL — dsy1107-pedidos-db.crlbffxj6fqf.us-east-1.rds.amazonaws.com |
-| Backend       | EC2 Amazon Linux 2023, Java 21 — IP elástica 3.234.179.54                           |
+| Backend       | EC2 `dsy1107-pedidos` (Amazon Linux 2023, Java 21) — IP elástica 3.234.179.54      |
 | API Gateway   | HTTP API — https://tjkn3r8p13.execute-api.us-east-1.amazonaws.com                   |
 | Frontend      | Ejecución local en http://localhost:4200                                            |
+| RabbitMQ y mensajería | EC2 `dsy1107-rabbit` — clúster de 2 nodos con Docker Compose, `pedidos-mensajeria` (8081) y `rabbit-admin` (8082) |
 
 El JWT Authorizer del API Gateway se configura con:
 
@@ -221,6 +251,8 @@ El JWT Authorizer del API Gateway se configura con:
 El Security Group de RDS acepta conexiones en el puerto 5432 únicamente desde
 el Security Group de la instancia EC2, de modo que la base de datos no queda
 expuesta a Internet.
+
+Kafka y Kafka UI no tienen fila en esta tabla: corren solo en local con Docker Compose (ver sección 12).
 
 ---
 
@@ -234,9 +266,12 @@ expuesta a Internet.
 | POST   | `/api/orders`                |   ✔   |    ✔     |        ✔         |
 | PUT    | `/api/orders/{id}/status`    |   ✔   |    ✔     |      ✘ 403       |
 | GET    | `/api/catalog/products`      |   ✔   |    ✔     |        ✔         |
+| GET    | `/api/catalog/products/{id}` |   ✔   |    ✔     |        ✔         |
 | POST   | `/api/catalog/products`      |   ✔   |  ✘ 403   |      ✘ 403       |
 | PUT    | `/api/catalog/products/{id}` |   ✔   |  ✘ 403   |      ✘ 403       |
 | GET    | `/api/admin/resumen`         |   ✔   |  ✘ 403   |      ✘ 403       |
+
+Los endpoints de administración de RabbitMQ se documentan en [`docs/EP3-EP4-mensajeria.md`](docs/EP3-EP4-mensajeria.md) (sección 4). Los de Kafka en [`infra/kafka/README.md`](infra/kafka/README.md) (sección "Administración").
 
 ---
 
@@ -309,6 +344,14 @@ ni pedidos aceptados sin respaldo de inventario.
 La interfaz solo ofrece las transiciones válidas para el estado actual del
 pedido, pero esa restricción es una ayuda visual: la validación que realmente
 protege el sistema ocurre en el backend.
+
+### Pruebas unitarias
+
+| Módulo          | Tests | Comando                                                   |
+| --------------- | ----- | --------------------------------------------------------- |
+| `rabbit-admin`  | 11    | `.\mvnw.cmd test` en `backend-springboot/rabbit-admin`    |
+
+Los servicios Kafka (`ms-auditoria` 5, `ms-analitica` 5, `kafka-admin` 3) se detallan en la sección 12. Todos pasan sin infraestructura levantada.
 
 ---
 
