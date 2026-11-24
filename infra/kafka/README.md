@@ -42,7 +42,7 @@ flowchart LR
 
 ## Tópicos y justificación
 
-Todos con **3 particiones y 3 réplicas**.
+Todos con **3 particiones, 3 réplicas**, `min.insync.replicas=2` y `cleanup.policy=delete`: los mensajes se borran al vencer la retención (no se compactan, porque cada evento tiene valor por sí mismo).
 
 | Tópico                           | Retención | Para qué                                                                                                                                                |
 | -------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -153,4 +153,5 @@ Servicios: `ms-auditoria`, `ms-analitica`, `kafka-admin` y `pedidos-api`. Para e
 - **Kafka solo corre en local:** en AWS (EC2) el productor está desactivado.
 
 ## Kafka (EP5 / EP6)
+
 Arquitectura, tópicos, consumidores, manejo de errores y administración: ver [`infra/kafka/README.md`](infra/kafka/README.md).

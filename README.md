@@ -56,14 +56,14 @@ La validación de seguridad ocurre en dos capas:
 
 ## 3. Tecnologías
 
-| Capa | Tecnología |
-|---|---|
-| Frontend | Angular 21, MSAL Angular 6, TypeScript |
-| Backend | Java 21, Spring Boot 3.5.16, Spring Security, Spring Data JPA |
-| Identidad | Microsoft Entra ID (OAuth 2.0 + OIDC) |
-| Base de datos | PostgreSQL 18 (Amazon RDS en la nube, Docker en local) |
-| Documentación API | springdoc-openapi (Swagger UI) |
-| Infraestructura | AWS EC2, AWS API Gateway (HTTP API) |
+| Capa              | Tecnología                                                    |
+| ----------------- | ------------------------------------------------------------- |
+| Frontend          | Angular 21, MSAL Angular 6, TypeScript                        |
+| Backend           | Java 21, Spring Boot 3.5.16, Spring Security, Spring Data JPA |
+| Identidad         | Microsoft Entra ID (OAuth 2.0 + OIDC)                         |
+| Base de datos     | PostgreSQL 18 (Amazon RDS en la nube, Docker en local)        |
+| Documentación API | springdoc-openapi (Swagger UI)                                |
+| Infraestructura   | AWS EC2, AWS API Gateway (HTTP API)                           |
 
 ---
 
@@ -113,36 +113,39 @@ pedidos360/
 Se utilizan dos App Registrations, separando el cliente del recurso protegido.
 
 **Pedidos360 (SPA — frontend)**
+
 - Plataforma: Single-page application
 - Redirect URI: `http://localhost:4200`
 - Permiso delegado sobre la API: `Pedidos.Read`, `Pedidos.Write`
 - Sin client secret: la SPA usa PKCE
 
 **Pedidos360-API (backend)**
+
 - Expone el scope `api://<CLIENT_ID_API>/Pedidos.Read`
 - App Roles: `Admin`, `Operador`, `Cliente`
 - `requestedAccessTokenVersion: 2` para emitir tokens v2
 
-Los roles se asignan a cada usuario desde *Aplicaciones empresariales →
-Usuarios y grupos*, y llegan al backend dentro del claim `roles` del access
+Los roles se asignan a cada usuario desde _Aplicaciones empresariales →
+Usuarios y grupos_, y llegan al backend dentro del claim `roles` del access
 token.
 
 ### Claims relevantes del token
 
-| Claim | Contenido | Uso |
-|---|---|---|
-| `iss` | `https://login.microsoftonline.com/<TENANT_ID>/v2.0` | Verifica el emisor |
-| `aud` | Client ID de Pedidos360-API | Verifica que el token sea para esta API |
-| `scp` | `Pedidos.Read` | Permiso delegado |
-| `roles` | `["Admin"]`, `["Operador"]` o `["Cliente"]` | Autorización por rol |
-| `sub` | Identificador único del usuario | Identifica al dueño de cada pedido |
-| `exp` | Fecha de expiración | Vigencia del token |
+| Claim   | Contenido                                            | Uso                                     |
+| ------- | ---------------------------------------------------- | --------------------------------------- |
+| `iss`   | `https://login.microsoftonline.com/<TENANT_ID>/v2.0` | Verifica el emisor                      |
+| `aud`   | Client ID de Pedidos360-API                          | Verifica que el token sea para esta API |
+| `scp`   | `Pedidos.Read`                                       | Permiso delegado                        |
+| `roles` | `["Admin"]`, `["Operador"]` o `["Cliente"]`          | Autorización por rol                    |
+| `sub`   | Identificador único del usuario                      | Identifica al dueño de cada pedido      |
+| `exp`   | Fecha de expiración                                  | Vigencia del token                      |
 
 ---
 
 ## 6. Ejecución local
 
 ### Requisitos
+
 Java 21, Node.js 22, Docker Desktop.
 
 ### 1. Base de datos
@@ -186,12 +189,12 @@ Disponible en `http://localhost:4200`.
 
 ## 7. Despliegue en AWS
 
-| Componente | Detalle |
-|---|---|
+| Componente    | Detalle                                                                             |
+| ------------- | ----------------------------------------------------------------------------------- |
 | Base de datos | Amazon RDS PostgreSQL — dsy1107-pedidos-db.crlbffxj6fqf.us-east-1.rds.amazonaws.com |
-| Backend | EC2 Amazon Linux 2023, Java 21 — IP elástica 3.234.179.54 |
-| API Gateway | HTTP API — https://tjkn3r8p13.execute-api.us-east-1.amazonaws.com |
-| Frontend | Ejecución local en http://localhost:4200 |
+| Backend       | EC2 Amazon Linux 2023, Java 21 — IP elástica 3.234.179.54                           |
+| API Gateway   | HTTP API — https://tjkn3r8p13.execute-api.us-east-1.amazonaws.com                   |
+| Frontend      | Ejecución local en http://localhost:4200                                            |
 
 El JWT Authorizer del API Gateway se configura con:
 
@@ -207,17 +210,17 @@ expuesta a Internet.
 
 ## 8. Endpoints y permisos
 
-| Método | Ruta | Admin | Operador | Cliente |
-|---|---|:---:|:---:|:---:|
-| GET | `/api/publico` | ✔ | ✔ | ✔ (sin token) |
-| GET | `/api/orders` | todos | todos | solo los propios |
-| GET | `/api/orders/{id}` | ✔ | ✔ | solo los propios |
-| POST | `/api/orders` | ✔ | ✔ | ✔ |
-| PUT | `/api/orders/{id}/status` | ✔ | ✔ | ✘ 403 |
-| GET | `/api/catalog/products` | ✔ | ✔ | ✔ |
-| POST | `/api/catalog/products` | ✔ | ✘ 403 | ✘ 403 |
-| PUT | `/api/catalog/products/{id}` | ✔ | ✘ 403 | ✘ 403 |
-| GET | `/api/admin/resumen` | ✔ | ✘ 403 | ✘ 403 |
+| Método | Ruta                         | Admin | Operador |     Cliente      |
+| ------ | ---------------------------- | :---: | :------: | :--------------: |
+| GET    | `/api/publico`               |   ✔   |    ✔     |  ✔ (sin token)   |
+| GET    | `/api/orders`                | todos |  todos   | solo los propios |
+| GET    | `/api/orders/{id}`           |   ✔   |    ✔     | solo los propios |
+| POST   | `/api/orders`                |   ✔   |    ✔     |        ✔         |
+| PUT    | `/api/orders/{id}/status`    |   ✔   |    ✔     |      ✘ 403       |
+| GET    | `/api/catalog/products`      |   ✔   |    ✔     |        ✔         |
+| POST   | `/api/catalog/products`      |   ✔   |  ✘ 403   |      ✘ 403       |
+| PUT    | `/api/catalog/products/{id}` |   ✔   |  ✘ 403   |      ✘ 403       |
+| GET    | `/api/admin/resumen`         |   ✔   |  ✘ 403   |      ✘ 403       |
 
 ---
 
@@ -269,14 +272,14 @@ ni pedidos aceptados sin respaldo de inventario.
 
 ## 10. Pruebas de seguridad
 
-| Escenario | Resultado | Responsable |
-|---|---|---|
-| Petición sin token a `/api/orders` | **401** | API Gateway / Spring Security |
-| Token válido con rol correcto | **200** | Spring Security |
-| Cliente intenta `POST /api/catalog/products` | **403** | Spring Security |
-| Cliente intenta cambiar el estado de un pedido | **403** | Spring Security |
-| Operador intenta `CREADO → DESPACHADO` | **409** | Regla de negocio |
-| Cliente consulta el pedido de otro cliente | **403** | Regla de negocio |
+| Escenario                                      | Resultado | Responsable                   |
+| ---------------------------------------------- | --------- | ----------------------------- |
+| Petición sin token a `/api/orders`             | **401**   | API Gateway / Spring Security |
+| Token válido con rol correcto                  | **200**   | Spring Security               |
+| Cliente intenta `POST /api/catalog/products`   | **403**   | Spring Security               |
+| Cliente intenta cambiar el estado de un pedido | **403**   | Spring Security               |
+| Operador intenta `CREADO → DESPACHADO`         | **409**   | Regla de negocio              |
+| Cliente consulta el pedido de otro cliente     | **403**   | Regla de negocio              |
 
 ### Diferencias por rol en la interfaz
 
@@ -302,3 +305,24 @@ Docker Compose (`infra/cluster`).
 
 Diseño, política de errores, endpoints de administración y trazabilidad con la rúbrica:
 [`docs/EP3-EP4-mensajeria.md`](docs/EP3-EP4-mensajeria.md).
+
+---
+
+## 12. Streaming con Kafka (EP5 y EP6)
+
+Kafka complementa a RabbitMQ, no lo reemplaza. `pedidos-api` publica cada cambio de estado de un pedido en un tópico; `ms-auditoria` guarda la línea de tiempo de cada pedido; `ms-analitica` detecta anomalías (por ejemplo, una cancelación tardía) y publica alertas en un segundo tópico; y `kafka-admin` administra tópicos y grupos de consumo. El clúster es de 3 ZooKeeper + 3 brokers con Docker Compose (`infra/kafka`).
+
+| Servicio             | Puerto | Función                                                                     |
+| -------------------- | ------ | --------------------------------------------------------------------------- |
+| `pedidos-api`        | 8080   | API principal. Productor Kafka si `KAFKA_HABILITADO=true`                   |
+| `pedidos-mensajeria` | 8081   | Consumidores RabbitMQ                                                       |
+| `rabbit-admin`       | 8082   | Administración de RabbitMQ (rol Admin)                                      |
+| `kafka-admin`        | 8083   | Administración de Kafka (rol Admin). Variable `KAFKA_BOOTSTRAP_SERVERS`     |
+| `ms-auditoria`       | 8084   | Consumidor (grupos `pedidos360-auditoria` y `pedidos360-auditoria-alertas`) |
+| `ms-analitica`       | 8085   | Consumidor y productor (grupo `pedidos360-analitica`)                       |
+| Kafka UI             | 8090   | Solo en `127.0.0.1`, sin login                                              |
+| Front Angular        | 4200   |                                                                             |
+
+Pruebas unitarias de los servicios Kafka: `.\mvnw.cmd test` dentro de cada carpeta.
+
+Arquitectura, tópicos, manejo de errores, scripts y trazabilidad con la rúbrica: [`infra/kafka/README.md`](infra/kafka/README.md).
